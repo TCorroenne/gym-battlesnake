@@ -9,6 +9,7 @@
 
 #include "gameinstance.h"
 #include "threadpool.h"
+#include "gamerenderer.h"
 
 #define NUM_LAYERS 17 // 7 layers indicating the number of alive opponents
 #define LAYER_WIDTH 23
@@ -331,7 +332,7 @@ public:
         info_[ii].ate_ = false;
         info_[ii].over_ = false;
         info_[ii].alive_count_ = n_models_;
-        info_[ii].death_reason_ = DEATH_NONE;
+        info_[ii].death_reason_ = 0; //DEATH_NONE;
       });
     }
     threadpool_.wait();
@@ -384,7 +385,7 @@ public:
         info_[ii].ate_ = it->second.health_ == 100 && gi->turn() > 0;
         info_[ii].over_ = done;
         info_[ii].alive_count_ = count;
-        info_[ii].death_reason_ = it->second.death_reason_;
+        info_[ii].death_reason_ = 0;//it->second.death_reason_;
 
         // Reset game if over
         if (done) {
@@ -408,9 +409,17 @@ public:
     }
     threadpool_.wait();
   }
-
+  void render() {
+        if(!gr_) {
+            gr_.reset(new GameRenderer(800,600));
+            gr_->init();
+        }
+        gr_->attach(envs_[0]);
+        gr_->render();
+    }
   unsigned n_threads_, n_envs_, n_models_;
   ThreadPool threadpool_;
+  std::unique_ptr<GameRenderer> gr_;
   bool fixed_orientation_, use_symmetry_;
   std::vector<std::shared_ptr<GameInstance>> envs_;
   std::vector<uint8_t> obss_;
@@ -419,17 +428,18 @@ public:
 };
 
 extern "C" {
-GameWrapper *env_new(unsigned n_threads, unsigned n_envs, unsigned n_models, bool fixed_orientation, bool use_symmetry) {
-  return new GameWrapper(n_threads, n_envs, n_models, fixed_orientation, use_symmetry);
-}
-void env_delete(GameWrapper *p) { delete p; }
-void env_reset(GameWrapper *p) { p->reset(); }
-void env_step(GameWrapper *p) { p->step(); }
-uint8_t *env_getobspointer(GameWrapper *p, unsigned model_i) {
-  return &p->obss_[model_i * (p->n_envs_ * OBS_SIZE)];
-}
-uint8_t *env_getactpointer(GameWrapper *p, unsigned model_i) {
-  return &p->acts_[model_i * p->n_envs_];
-}
-info *env_getinfopointer(GameWrapper *p) { return &p->info_[0]; }
+  GameWrapper *env_new(unsigned n_threads, unsigned n_envs, unsigned n_models, bool fixed_orientation, bool use_symmetry) {
+    return new GameWrapper(n_threads, n_envs, n_models, fixed_orientation, use_symmetry);
+  }
+  void env_delete(GameWrapper *p) { delete p; }
+  void env_reset(GameWrapper *p) { p->reset(); }
+  void env_step(GameWrapper *p) { p->step(); }
+  void env_render(GameWrapper *p) { p->render(); }
+  uint8_t *env_getobspointer(GameWrapper *p, unsigned model_i) {
+    return &p->obss_[model_i * (p->n_envs_ * OBS_SIZE)];
+  }
+  uint8_t *env_getactpointer(GameWrapper *p, unsigned model_i) {
+    return &p->acts_[model_i * p->n_envs_];
+  }
+  info *env_getinfopointer(GameWrapper *p) { return &p->info_[0]; }
 }
