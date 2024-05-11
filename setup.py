@@ -51,9 +51,9 @@ setup(
     url="https://github.com/ArthurFirmino/gym-battlesnake",
     packages=["gym_battlesnake"],
     install_requires=[
-        'gym',
+        'gymnasium',
         'numpy',
-        'stable-baselines==2.10.0',
+        'stable-baselines3',
     ],
     ext_modules=[CMakeExtension('gym_battlesnake/gym_battlesnake')],
     cmdclass=dict(build_ext=CMakeBuild),

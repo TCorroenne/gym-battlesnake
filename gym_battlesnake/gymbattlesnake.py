@@ -3,9 +3,9 @@ import ctypes
 import pathlib
 import random
 from time import sleep
-from gym import spaces
+from gymnasium import spaces
 import torch
-from stable_baselines.common.vec_env import VecEnv
+from stable_baselines3.common.vec_env import VecEnv
 
 def wrap_function(lib, funcname, restype, argtypes):
     """Simplify wrapping ctypes functions"""
@@ -123,6 +123,12 @@ class ParallelBattlesnakeEnv(VecEnv):
                    indices=None,
                    **method_kwargs):
         pass
+    def env_is_wrapped(self,
+                   method_name,
+                   *method_args,
+                   indices=None,
+                   **method_kwargs):
+        pass
 
     def seed(self, seed=None):
         pass
@@ -196,12 +202,20 @@ class BattlesnakeEnv(VecEnv):
         return np.ctypeslib.as_array(actptr, shape=(self.n_envs,))
 
     def get_attr(self, attr_name, indices=None):
+        if(attr_name=="render_mode"):
+            return ["human"]
         pass
 
     def set_attr(self, attr_name, value, indices=None):
         pass
 
     def env_method(self,
+                   method_name,
+                   *method_args,
+                   indices=None,
+                   **method_kwargs):
+        pass
+    def env_is_wrapped(self,
                    method_name,
                    *method_args,
                    indices=None,
